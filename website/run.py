@@ -1,65 +1,17 @@
-from flask import render_template, flash, redirect, url_for, request
-from werkzeug.urls import url_parse
-from app import app, db
-from app.forms import LoginForm, RegistrationForm
-from flask_login import current_user, login_user, logout_user, login_required
-from app.models import User
-
-@app.route('/')
-@app.route('/index')
-@login_required
-def index():
-    return render_template('index.html')
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(phonenumber=form.phonenumber.data).first()
-        if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
-            return redirect(url_for('login'))
-        login_user(user, remember=form.remember_me.data)
-        next_page = request.args.get('next')
-        if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('index')
-        return redirect(next_page)
-    return render_template('login.html', title='Sign In', form=form)
-
-@app.route('/logout')
-def logout():
-    logout_user()
-    return redirect(url_for('index'))
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        user = User(name=form.name.data, phonenumber=form.phonenumber.data, creditcard=form.creditcard.data, cvv=form.cvv.data, expiration=form.expiration.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        flash('Congratulations, you are now a registered user!')
-        return redirect(url_for('login'))
-    return render_template('register.html', title='Register', form=form)
-
-
+# /usr/bin/env python
+# Download the twilio-python library from twilio.com/docs/libraries/python
 import smartcar
-import datetime
 from flask import Flask, request, redirect, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
-#from flask_cors import CORS
+from flask_cors import CORS
 from math import sin, cos, sqrt, atan2, radians
 
 from app import app, db
 from app.models import User, Trip
 
 
-#app = Flask(__name__)
-#CORS(app)
+app = Flask(__name__)
+CORS(app)
 
 access = None
 #user's location--hard-coded to Rutgers Student Center for now
@@ -69,14 +21,14 @@ userlong = -74.45188903808594
 client = smartcar.AuthClient(
     client_id='906e6fc9-ee9e-4622-b19c-6055e4a7afe0',
     client_secret='9309bbfe-8de5-4a89-819e-6855b824bf3c',
-    redirect_uri='http://localhost:5000/exchange',
+    redirect_uri='http://localhost:8000/exchange',
     scope=['read_vehicle_info', 'read_location', 'read_odometer', 'control_security', 'control_security:unlock', 'control_security:lock'],
     #test_mode=True
 )
 
 
 @app.route('/auth', methods=['GET'])
-def auth():
+def login():
     auth_url = client.get_auth_url()
     return redirect(auth_url)
 
@@ -113,14 +65,14 @@ def sms_reply():
 
     global cars
     global carsinfo
-    global carconfirmed
+    global carsconfirmed
     global myrental
     global startingmileage
     global priceperkm
     global startlat
     global startlon
 
-    if carconfirmed == 0 and "rent" in text and "car" in text:
+    if carconfirmed == 0 and "rent a car" in text:
         cars = []
         carsinfo = []
         global access
@@ -167,13 +119,13 @@ def sms_reply():
             response += "To confirm this car rental, respond with 'Confirm'\n(note that confirming will unlock the car)"
             resp.message(response)
             myrental = vehicle
-            carconfirmed = 1
-    elif carconfirmed == 1 and "Confirm" in text:
+            carsconfirmed = 1
+    elif carsconfirmed == 1 and "Confirm" in text:
     #    myrental.unlock()
         startingmileage = myrental.odometer()["data"]["distance"]
         response = "Ok, your rental has been confirmed! Your rental car has been unlocked.\nRespond with 'Done' when you are finished."
         resp.message(response)
-    elif carconfirmed == 1 and "Done" in text:
+    elif carsconfirmed == 1 and "Done" in text:
     #    myrental.lock()
         distancetravelled = myrental.odometer()["data"]["distance"] - startingmileage
         print("distancetravelled:\n")
@@ -187,25 +139,17 @@ def sms_reply():
         vinfo = myrental.info()
         users = User.query.all()
         user = None
-        print("here are the users: ")
-        print(User.query.all())
         for u in users:
-            print(u.phonenumber)
             if u.phonenumber == request.values.get('From', None):
                 user = u
 
+        resp.message("Whoops, look like you haven't registered! Try again.")
 
-        dt = datetime.datetime.now()
-        minute = str(dt.minute)
-        if dt.minute < 10:
-            minute = "0" + str(dt.minute)
-        time = str(dt.hour) + ":" + minute + ", " + str(dt.month) + "/" + str(dt.day) + "/" + str(dt.year)
         trip = Trip(startlat=str(startlat), startlon=str(startlon), endlat=str(vloc["data"]["latitude"]), endlon=str(vloc["data"]["longitude"]),
                 distance=str(distancetravelled)+" km", car=str(vinfo["year"])  + " " + str(vinfo["make"]) + " " + str(vinfo["model"]),
-                cost="$" + str(int(distancetravelled/priceperkm))[0:4], time=time, rider=user)
+                cost="$" + str(int(distancetravelled/priceperkm))[0:4], rider=user)
         db.session.add(trip)
         db.session.commit()
-        carconfirmed = 0
     else:
         resp.message("Sorry, I didn't get that.")
 
@@ -227,3 +171,7 @@ def calc_distance(lata, longa, latb, longb):
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     distance = R * c
     return distance
+
+
+#if __name__ == "__main__":
+#    app.run(debug=True, port=8000)

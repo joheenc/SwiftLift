@@ -1,10 +1,32 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>{{ current_user.name }}'s Trip Dashboard</h1>
+    <h1><font face="georgia">{{ current_user.name }}'s SwiftLift Trip Dashboard</font></h1>
     {% for trip in current_user.trips.all() %}
-    <div><p>Travelled {{ trip.distance }} with the {{ trip.car }}: </p>
-    <p>https://www.google.com/maps/dir/{{ trip.startlat }},+{{ trip.startlon }}/{{ trip.endlat }},+{{ trip.endlon }}</p>
-    <p>Total cost: {{ trip.cost }} </p></div>
+    <font size="3" face="courier">
+<style>
+  table{
+    width: 50%;
+  }
+  td, th {
+    border: 2px solid #dddddd;
+    text-align: left;
+    padding:12px;
+  }
+  </style>
+  <table>
+    <tr>
+      <th>
+    <div><p>{{ trip.time }}:</p>
+    <p>Travelled {{ trip.distance }} with the {{ trip.car }}: </p>
+    <a href = "https://www.google.com/maps/dir/{{ trip.startlat }},+{{ trip.startlon }}/{{ trip.endlat }},+{{ trip.endlon }}">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/48/GoogleMaps_logo.svg" width = "55" height = "55" border = "0">
+    </a>
+  <!-- https://www.google.com/maps/dir/{{ trip.startlat }},+{{ trip.startlon }}/{{ trip.endlat }},+{{ trip.endlon }} -->
+    <p>Total cost: {{ trip.cost }}</p><br /><br /></div>
+    </th>
+    </tr>
+    </table>
+    </font>
     {% endfor %}
 {% endblock %}
