@@ -3,6 +3,8 @@
 {% block content %}
     <h1>{{ current_user.name }}'s Trip Dashboard</h1>
     {% for trip in current_user.trips.all() %}
-    <div><p>Travelled {{ trip.distance }}</p></div>
+    <div><p>Travelled {{ trip.distance }} with the {{ trip.car }}: </p>
+    <p>https://www.google.com/maps/dir/{{ trip.startlat }},+{{ trip.startlon }}/{{ trip.endlat }},+{{ trip.endlon }}</p>
+    <p>Total cost: {{ trip.cost }} </p></div>
     {% endfor %}
 {% endblock %}
