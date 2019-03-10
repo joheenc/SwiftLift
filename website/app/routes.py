@@ -120,7 +120,7 @@ def sms_reply():
     global startlat
     global startlon
 
-    if carconfirmed == 0 and "rent" in text and "car" in text:
+    if carconfirmed == 0 and "rent" in text.lower() and "car" in text.lower():
         cars = []
         carsinfo = []
         global access
@@ -146,7 +146,7 @@ def sms_reply():
             response += s + "\n"
         response += "\nTo see more about a car, respond with 'Car <number>'"
         resp.message(response)
-    elif carconfirmed == 0 and "Car" in text:
+    elif carconfirmed == 0 and "car" in text.lower():
         carnum = int(text.replace("Car ", ""))
         print("Carnum = " + str(carnum))
         print("len(cars) = " + str(len(carsinfo)))
@@ -168,7 +168,7 @@ def sms_reply():
             resp.message(response)
             myrental = vehicle
             carconfirmed = 1
-    elif carconfirmed == 1 and "Confirm" in text:
+    elif carconfirmed == 1 and "confirm" in text.lower():
     #    myrental.unlock()
         startingmileage = myrental.odometer()["data"]["distance"]
         response = "Ok, your rental has been confirmed! Your rental car has been unlocked.\nRespond with 'Done' when you are finished."
