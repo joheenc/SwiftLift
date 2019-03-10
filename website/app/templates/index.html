@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>{{ current_user.name }}'s Trip Dashboard</h1>
+    {% for trip in current_user.trips.all() %}
+    <div><p>Travelled {{ trip.distance }}</p></div>
+    {% endfor %}
+{% endblock %}
