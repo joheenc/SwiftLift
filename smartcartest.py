@@ -17,6 +17,11 @@ client = smartcar.AuthClient(
     #test_mode=True
 )
 
+x = "setvariable"
+y = 5
+
+if x==y(
+    z=true)
 @app.route('/login', methods=['GET'])
 def login():
     auth_url = client.get_auth_url()
